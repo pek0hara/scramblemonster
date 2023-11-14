@@ -31,15 +31,15 @@ Future<bool> search(int cost) async {
   do {
     Monster searchedMonster = Monster.search(searchStatus);
 
-    if (ownMonsters.length < 5) {
-      ownMonsters.add(searchedMonster);
-      await saveData(ownMonsters);
-
-      infoMessage = Text('モンスターが仲間に加わった！');
-    } else {
+    // if (ownMonsters.length < 5) {
+    //   ownMonsters.add(searchedMonster);
+    //   await saveData(ownMonsters);
+    //
+    //   infoMessage = Text('モンスターが仲間に加わった！');
+    // } else {
       searchedMonsters.add(searchedMonster);
       infoMessage = Text('モンスターを発見した！');
-    }
+    // }
 
     randRetry = random.nextInt(searchStatus.will + 1);
     successRetry += 50;

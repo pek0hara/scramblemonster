@@ -63,21 +63,35 @@ Future<bool> combine() async {
 int calculateGrowth(int value1, int value2) {
   int difference = (value1 - value2).abs();
   double percentDifference = difference / ((value1 + value2) / 2) * 100;
+  int growthRate = 0;
 
   if (percentDifference <= 15) {
-    return 80;
+    if (value1 + value2 < 100) {
+      growthRate += 20;
+    } else if (value1 + value2 < 180) {
+      growthRate += 16;
+    } else {
+      growthRate += 12;
+    }
+    growthRate += 60;
   } else if (percentDifference <= 45) {
-    return 70;
+    growthRate += 70;
   } else {
-    return 60;
+    growthRate += 60;
   }
+
+  return growthRate;
 }
 
 Monster newCombinedMonster(Monster monster1, Monster monster2) {
   // 各属性の成長率を計算する
-  int growM = calculateGrowth(monster1.magic, monster2.magic);
-  int growW = calculateGrowth(monster1.will, monster2.will);
-  int growI = calculateGrowth(monster1.intel, monster2.intel);
+  // int growM = calculateGrowth(monster1.magic, monster2.magic);
+  // int growW = calculateGrowth(monster1.will, monster2.will);
+  // int growI = calculateGrowth(monster1.intel, monster2.intel);
+
+  int growM = calculateGrowth(monster1.lv, monster2.lv);
+  int growW = calculateGrowth(monster1.lv, monster2.lv);
+  int growI = calculateGrowth(monster1.lv, monster2.lv);
 
   // 合体後のモンスターのステータスを計算するロジック
   int newM = (monster1.magic + monster2.magic) * growM ~/ 100;

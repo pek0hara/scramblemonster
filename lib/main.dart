@@ -14,6 +14,7 @@ enum ScreenState { home, game, result }
 List<Monster> ownMonsters = [];
 List<Monster?> combineMonsters = [null, null];
 List<Monster> searchedMonsters = [];
+List<Monster> keepFlg = [];
 
 Text infoMessage = Text('');
 int maxMagicPower = 0;
@@ -355,8 +356,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: buttons,
               );
             },
-          )
-
+          ),
         ] else if (_screenState == ScreenState.result) ...[
           // リザルト画面
           Text('上位の結果'),
@@ -391,41 +391,8 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
           ),
-          Text('直近の結果'),
-          Expanded(
-            child: FutureBuilder<List>(
-              future: ResultHelper.getResults(),
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  return ListView.builder(
-                    itemCount: snapshot.data!.length,
-                    itemBuilder: (context, index) {
-                      List<Monster> partyMonsters =
-                          (snapshot.data![index]['party'] as List)
-                              .map((json) => Monster.fromJson(json))
-                              .toList();
-                      return ListTile(
-                        title: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: partyMonsters
-                              .map((monster) => MonsterWidget(monster: monster))
-                              .toList(),
-                        ),
-                        subtitle: Text(
-                            '最高Lv. ${snapshot.data![index]['maxMagicPower']} '
-                            'スコア: ${snapshot.data![index]['score']} '),
-                      );
-                    },
-                  );
-                } else {
-                  return CircularProgressIndicator();
-                }
-              },
-            ),
-          )
         ]
       ]),
-      // bottomNavigationBar: bottomNavBar,
     );
   }
 
@@ -474,9 +441,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget buildNewCombinedMonsterWidget(Monster monster1, Monster monster2) {
     // 各属性の成長率を計算する
-    int growM = calculateGrowth(monster1.magic, monster2.magic);
-    int growW = calculateGrowth(monster1.will, monster2.will);
-    int growI = calculateGrowth(monster1.intel, monster2.intel);
+    int growM = calculateGrowth(monster1.lv, monster2.lv);
+    int growW = calculateGrowth(monster1.lv, monster2.lv);
+    int growI = calculateGrowth(monster1.lv, monster2.lv);
 
     // 合体後のモンスターを生成
     Monster combinedMonster = newCombinedMonster(monster1, monster2);
@@ -539,13 +506,14 @@ class _MyHomePageState extends State<MyHomePage> {
       }
 
       if (draggedMonster == targetMonster) {
-        if (searchedMonsters.contains(draggedMonster) &&
-            ownMonsters.length < 5){
-          searchedMonsters.remove(draggedMonster);
-          ownMonsters.add(draggedMonster);
+        if (searchedMonsters.contains(draggedMonster)) {
+          if (ownMonsters.length < 5) {
+            searchedMonsters.remove(draggedMonster);
+            ownMonsters.add(draggedMonster);
 
-          infoMessage = Text('モンスターを仲間に加えた！');
-          return;
+            infoMessage = Text('モンスターを仲間に加えた！');
+            return;
+          }
         }
 
         if (combineMonsters[1] == draggedMonster) {
@@ -594,7 +562,10 @@ class OwnMonsterBox extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              MonsterWidget(monster: monster),
+              if (combineMonsters[0] != null)
+                ExpectMonsterWidget(monster: monster)
+              else
+                MonsterWidget(monster: monster)
             ],
           ),
         );
@@ -602,12 +573,13 @@ class OwnMonsterBox extends StatelessWidget {
       onWillAccept: (data) => true,
       onAccept: (data) {
         final _MyHomePageState state =
-            context.findAncestorStateOfType<_MyHomePageState>()!;
+        context.findAncestorStateOfType<_MyHomePageState>()!;
         state._swapMonster(data, monster);
       },
     );
   }
 }
+
 
 class MonsterWidget extends StatelessWidget {
   final Monster monster;
@@ -643,7 +615,7 @@ class MonsterWidget extends StatelessWidget {
             Container(
               width: 60,
               height: 60,
-              color: Colors.black, // 背景を黒に設定
+              color: this.backColor, // 背景を黒に設定
             ),
             // アイコン用のImage.asset
             Positioned.fill(
@@ -691,3 +663,45 @@ class MonsterWidget extends StatelessWidget {
     );
   }
 }
+
+class ExpectMonsterWidget extends StatelessWidget {
+  final Monster monster;
+
+  ExpectMonsterWidget({
+    required this.monster,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // 各ステータスの成長率を計算
+    int growM = calculateGrowth(combineMonsters[0]!.lv, monster.lv);
+    int growW = calculateGrowth(combineMonsters[0]!.lv, monster.lv);
+    int growI = calculateGrowth(combineMonsters[0]!.lv, monster.lv);
+
+    // borderColorを決定
+    Color borderColor = determineBorderColor(growM, growW, growI);
+
+    // MonsterWidgetを返却
+    return MonsterWidget(
+      monster: monster,
+      borderColor: borderColor,
+    );
+  }
+
+  Color determineBorderColor(int growM, int growW, int growI) {
+    if (monster == combineMonsters[0]) {
+      return Colors.black; // 選択されたモンスターの色
+    }
+
+    // 成長率に基づいてborderColorを決定するロジック
+    if (growM > 70 || growW > 70 || growI > 70) {
+      return Colors.redAccent; // 高成長率の色
+    }
+    else if (growM > 60 || growW > 60 || growI > 60) {
+      return Colors.orangeAccent; // 高成長率の色
+    } else {
+      return Colors.grey; // 低成長率の色
+    }
+  }
+}
+
