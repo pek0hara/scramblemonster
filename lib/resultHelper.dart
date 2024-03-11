@@ -8,8 +8,8 @@ class ResultHelper {
   static Future<void> saveResult(Map<String, dynamic> result) async {
     final prefs = await SharedPreferences.getInstance();
     List<String>? results = prefs.getStringList(_resultKey) ?? [];
-    if (results.length >= 10) {
-      results.removeAt(9); // 最も古い結果を削除
+    if (results.length >= 100) {
+      results.removeAt(99); // 最も古い結果を削除
     }
     results.insert(0, jsonEncode(result));
     prefs.setStringList(_resultKey, results);

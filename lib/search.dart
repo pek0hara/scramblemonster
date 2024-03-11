@@ -5,10 +5,12 @@ import 'actionPointsHelper.dart';
 import 'main.dart';
 import 'monster.dart';
 
+int searchCost = 1;
+
 Future<bool> search(int cost) async {
   // 捜索ボタンが押された時の処理
   int currentPoints = await ActionPointsHelper.getActionPoints();
-  if (currentPoints < cost) {
+  if (currentPoints < 1) {
     // 行動力が足りない場合は処理を中断
     return false;
   }
@@ -21,7 +23,7 @@ Future<bool> search(int cost) async {
 
   // ここで捜索結果を表示するウィジェットを構築
   searchedMonsters.clear();
-  SearchStatus searchStatus = SearchStatus();
+  HighestStatus searchStatus = HighestStatus();
 
   final random = Random();
   int randRetry;
@@ -29,52 +31,51 @@ Future<bool> search(int cost) async {
   int successRetry = 0;
 
   do {
-    Monster searchedMonster = Monster.search(searchStatus);
+    Monster searchedMonster = createNewMonster();
 
-    // if (ownMonsters.length < 5) {
-    //   ownMonsters.add(searchedMonster);
-    //   await saveData(ownMonsters);
-    //
-    //   infoMessage = Text('モンスターが仲間に加わった！');
-    // } else {
       searchedMonsters.add(searchedMonster);
       infoMessage = Text('モンスターを発見した！');
-    // }
 
     randRetry = random.nextInt(searchStatus.will + 1);
-    successRetry += 50;
+    successRetry += 60;
     count++;
   } while (randRetry > successRetry && count < 5);
 
   await ActionPointsHelper.setActionPoints(currentPoints - cost);
 
   if (currentPoints <= 0) {
+    currentPoints = 0;
     return false;
   }
 
   return true;
 }
 
-class SearchStatus {
-  int will = -1;
-  int charm = -1;
-  int intel = -1;
+Monster createNewMonster() {
+  HighestStatus highestStatus = HighestStatus();
 
-  SearchStatus() {
-    will = ownMonsters[0].magic;
-    charm = ownMonsters[0].will;
-    intel = ownMonsters[0].intel;
+  final random = Random();
+  int max = 40 + highestStatus.lv ~/ 3;
+  // if (highestStatus.lv > 60) {
+  //   max = 70 + highestStatus.lv ~/ 4;
+  // }
+  int newW = random.nextInt(max) + 1;
+  int newC = random.nextInt(max - newW + 1) + 1;
+  int newI = random.nextInt(max - newW - newC + 2) + 1;
 
-    for (Monster monster in ownMonsters) {
-      if (monster.magic > will) {
-        will = monster.magic;
-      }
-      if (monster.will > charm) {
-        charm = monster.will;
-      }
-      if (monster.intel > intel) {
-        intel = monster.intel;
-      }
-    }
-  }
+// highestValues.will と 400を比較して小さい方を採用
+  int searchWill = highestStatus.will > 400 ? 400 : highestStatus.will;
+  int newNo = random.nextInt(searchWill ~/ 4 + 1);
+
+// Charm補正
+  newC += random.nextInt(highestStatus.charm ~/ 6 + 1);
+  int newM = (newW + newC + newI) ~/ 6;
+
+// Intel補正
+  max = highestStatus.intel ~/ 10 + 1;
+  newI += random.nextInt(max) + 1;
+  newC += random.nextInt(max) + 1;
+  newW += random.nextInt(max) + 1;
+
+  return Monster(no: newNo, magic: newW, will: newC, intel: newI, lv: newM);
 }

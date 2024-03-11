@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:scramblemonster/totalScoreHelper.dart';
 
@@ -60,24 +62,31 @@ Future<bool> combine() async {
   }
 }
 
-int calculateGrowth(int value1, int value2) {
-  int difference = (value1 - value2).abs();
-  double percentDifference = difference / ((value1 + value2) / 2) * 100;
-  int growthRate = 0;
+int calculateGrowth(Monster monster1, Monster monster2) {
+  int growthRate = 60;
 
-  if (percentDifference <= 15) {
-    if (value1 + value2 < 100) {
-      growthRate += 20;
-    } else if (value1 + value2 < 180) {
-      growthRate += 16;
-    } else {
-      growthRate += 12;
+  int value1 = monster1.magic + monster1.will + monster1.intel;
+  int value2 = monster2.magic + monster2.will + monster2.intel;
+  int sum = (value1 + value2) ~/ 7;
+
+  if (sum % 7 == 0) {
+    if (max(monster1.lv,monster2.lv) < 40) {
+      growthRate = 90;
+    } else if (max(monster1.lv,monster2.lv) < 100) {
+      growthRate = 80;
     }
-    growthRate += 60;
-  } else if (percentDifference <= 45) {
-    growthRate += 70;
+  } else if (sum % 3 == 0) {
+    if (max(monster1.lv,monster2.lv) < 40) {
+      growthRate = 80;
+    } else {
+      growthRate = 70;
+    }
   } else {
-    growthRate += 60;
+    if (max(monster1.lv, monster2.lv) < 40) {
+      growthRate = 70;
+    } else {
+      growthRate = 60;
+    }
   }
 
   return growthRate;
@@ -85,13 +94,9 @@ int calculateGrowth(int value1, int value2) {
 
 Monster newCombinedMonster(Monster monster1, Monster monster2) {
   // 各属性の成長率を計算する
-  // int growM = calculateGrowth(monster1.magic, monster2.magic);
-  // int growW = calculateGrowth(monster1.will, monster2.will);
-  // int growI = calculateGrowth(monster1.intel, monster2.intel);
-
-  int growM = calculateGrowth(monster1.lv, monster2.lv);
-  int growW = calculateGrowth(monster1.lv, monster2.lv);
-  int growI = calculateGrowth(monster1.lv, monster2.lv);
+  int growM = calculateGrowth(monster1, monster2);
+  int growW = calculateGrowth(monster1, monster2);
+  int growI = calculateGrowth(monster1, monster2);
 
   // 合体後のモンスターのステータスを計算するロジック
   int newM = (monster1.magic + monster2.magic) * growM ~/ 100;
@@ -99,8 +104,15 @@ Monster newCombinedMonster(Monster monster1, Monster monster2) {
   int newI = (monster1.intel + monster2.intel) * growI ~/ 100;
 
   // レベルとモンスター番号を計算するロジック
-  int newLv = (newM + newW + newI) ~/ 7;
-  int newNo = (newM + newW + newI) ~/ 7;
+  int total = newM + newW + newI;
+  int newLv;
+
+  if (total <= 360) {
+    newLv = total ~/ 6;
+  } else {
+    newLv = 60 + ((total - 360) ~/ 9);
+  }
+  int newNo = newLv;
 
   // モンスター番号が特定の範囲を超えないように制限する
   newNo = newNo > 177 ? 177 : newNo;

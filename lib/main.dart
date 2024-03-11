@@ -14,7 +14,7 @@ enum ScreenState { home, game, result }
 List<Monster> ownMonsters = [];
 List<Monster?> combineMonsters = [null, null];
 List<Monster> searchedMonsters = [];
-List<Monster> keepFlg = [];
+List<Monster> keepMonsters = [];
 
 Text infoMessage = Text('');
 int maxMagicPower = 0;
@@ -84,7 +84,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     await TotalScoreHelper.setScore(0);
     await ActionPointsHelper.setActionPoints(1000);
-    ownMonsters = [Monster(no: 0, magic: 10, will: 10, intel: 10, lv: 5)];
+    ownMonsters = [Monster(no: 0, magic: 10, will: 10, intel: 10, lv: 1)];
     combineMonsters = [null, null];
     searchedMonsters = [];
     infoMessage = Text('');
@@ -130,10 +130,10 @@ class _MyHomePageState extends State<MyHomePage> {
         return AlertDialog(
           title: Text('ゲームの説明'),
           content: Text('・モンスターの発見と合体を繰り返して強いモンスターを作るゲームです。\n'
-              '・気力が高いモンスターを持っていると、たくさんモンスターを発見できます。\n'
-              '・魅力が高いモンスターを持っていると、魅力が高いモンスターを発見できます。\n'
-              '・知力が高いモンスターを持っていると、魔力が高いモンスターを発見できます。\n'
-              '・魔力はモンスターの総合的な強さです。'),
+              '・魔力が高いモンスターを持っていると、たくさんモンスターを発見できます。\n'
+              '・精神が高いモンスターを持っていると、精神が高いモンスターを発見できます。\n'
+              '・知力が高いモンスターを持っていると、Lv.が高いモンスターを発見できます。\n'
+              '・Lvはモンスターの総合的な強さです。'),
           actions: [
             TextButton(
               child: Text('閉じる'),
@@ -316,7 +316,15 @@ class _MyHomePageState extends State<MyHomePage> {
           FutureBuilder<int>(
             future: ActionPointsHelper.getActionPoints(),
             builder: (context, snapshot) {
-              Text searchButtonText = Text('捜索 (-1)');
+              HighestStatus highestValue = HighestStatus();
+              // int searchCost = highestValue.lv >= 60 ? 2 : 1;
+              int searchCost = 1;
+              Text searchButtonText = Text('捜索 (-$searchCost)');
+              if (snapshot.hasData) {
+                if (0 < snapshot.data! && snapshot.data! < searchCost) {
+                  searchButtonText = Text('捜索 (-${snapshot.data})');
+                }
+              }
               bool isSearchButtonActive = true;
               List<Widget> buttons = [];
 
@@ -338,14 +346,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 ElevatedButton(
                   onPressed: isSearchButtonActive
                       ? () async {
-                    int cost = 1;
-                      bool result = await search(cost);
+                      bool result = await search(searchCost);
                       if (!result) {
                         infoMessage = Text('行動力がなくなりました',
                             style: TextStyle(color: Colors.red));
                       }
                       setState(() {});
                   }
+
                       : null, // ボタンを非アクティブ状態にする
                   child: searchButtonText,
                 ),
@@ -359,10 +367,10 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ] else if (_screenState == ScreenState.result) ...[
           // リザルト画面
-          Text('上位の結果'),
+          Text('結果'),
           Expanded(
             child: FutureBuilder<List>(
-              future: ResultHelper.getHighScores(),
+              future: ResultHelper.getResults(),
               builder: (context, snapshot) {
                 if (snapshot.hasData) {
                   return ListView.builder(
@@ -422,10 +430,10 @@ class _MyHomePageState extends State<MyHomePage> {
     Color color;
     FontWeight fontWeight;
 
-    if (growthRate == 80) {
+    if (growthRate >= 72) {
       color = Colors.redAccent;
       fontWeight = FontWeight.bold; // 成長率が80の場合は太字
-    } else if (growthRate == 70) {
+    } else if (growthRate >= 65) {
       color = Colors.orangeAccent;
       fontWeight = FontWeight.normal;
     } else {
@@ -441,9 +449,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget buildNewCombinedMonsterWidget(Monster monster1, Monster monster2) {
     // 各属性の成長率を計算する
-    int growM = calculateGrowth(monster1.lv, monster2.lv);
-    int growW = calculateGrowth(monster1.lv, monster2.lv);
-    int growI = calculateGrowth(monster1.lv, monster2.lv);
+    int growM = calculateGrowth(monster1, monster2);
+    int growW = calculateGrowth(monster1, monster2);
+    int growI = calculateGrowth(monster1, monster2);
 
     // 合体後のモンスターを生成
     Monster combinedMonster = newCombinedMonster(monster1, monster2);
@@ -512,7 +520,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ownMonsters.add(draggedMonster);
 
             infoMessage = Text('モンスターを仲間に加えた！');
-            return;
           }
         }
 
@@ -674,9 +681,9 @@ class ExpectMonsterWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 各ステータスの成長率を計算
-    int growM = calculateGrowth(combineMonsters[0]!.lv, monster.lv);
-    int growW = calculateGrowth(combineMonsters[0]!.lv, monster.lv);
-    int growI = calculateGrowth(combineMonsters[0]!.lv, monster.lv);
+    int growM = calculateGrowth(combineMonsters[0]!, monster);
+    int growW = calculateGrowth(combineMonsters[0]!, monster);
+    int growI = calculateGrowth(combineMonsters[0]!, monster);
 
     // borderColorを決定
     Color borderColor = determineBorderColor(growM, growW, growI);
@@ -694,10 +701,10 @@ class ExpectMonsterWidget extends StatelessWidget {
     }
 
     // 成長率に基づいてborderColorを決定するロジック
-    if (growM > 70 || growW > 70 || growI > 70) {
+    if (growM >= 72 || growW >= 72 || growI >= 72) {
       return Colors.redAccent; // 高成長率の色
     }
-    else if (growM > 60 || growW > 60 || growI > 60) {
+    else if (growM >= 65 || growW >= 65 || growI >= 65) {
       return Colors.orangeAccent; // 高成長率の色
     } else {
       return Colors.grey; // 低成長率の色

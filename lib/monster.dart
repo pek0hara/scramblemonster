@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:scramblemonster/search.dart';
+import 'package:scramblemonster/main.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -19,25 +19,6 @@ class Monster {
     this.intel = 1,
     this.lv = 1,
   });
-
-  static Monster search(SearchStatus highestValue) {
-
-    final random = Random();
-    int max = 60 +  highestValue.intel ~/ 4;
-    int newW = random.nextInt(max) + 1;
-    int newC = random.nextInt(max - newW + 1) + 1;
-    int newI = random.nextInt(max - newW - newC + 2) + 1;
-
-    // highestValues.will と 400を比較して小さい方を採用
-    int searchWill = highestValue.will > 400 ? 400 : highestValue.will;
-    int newNo = random.nextInt(searchWill ~/ 4 + 1);
-
-    newC += random.nextInt(highestValue.charm ~/ 8 + 1);
-    int newM = (newW + newC + newI) ~/ 7;
-
-    return Monster(
-        no: newNo, magic: newW, will: newC, intel: newI, lv: newM);
-  }
 
   // JSON形式のMapに変換
   Map<String, dynamic> toJson() {
@@ -73,5 +54,34 @@ Future<List<Monster>> loadData() async {
     return jsonList.map((jsonItem) => Monster.fromJson(jsonItem)).toList();
   } else {
     return [];
+  }
+}
+
+class HighestStatus {
+  int lv = -1;
+  int will = -1;
+  int charm = -1;
+  int intel = -1;
+
+  HighestStatus() {
+    lv = ownMonsters[0].lv;
+    will = ownMonsters[0].magic;
+    charm = ownMonsters[0].will;
+    intel = ownMonsters[0].intel;
+
+    for (Monster monster in ownMonsters) {
+      if (monster.lv > lv) {
+        lv = monster.lv;
+      }
+      if (monster.magic > will) {
+        will = monster.magic;
+      }
+      if (monster.will > charm) {
+        charm = monster.will;
+      }
+      if (monster.intel > intel) {
+        intel = monster.intel;
+      }
+    }
   }
 }
