@@ -8,4 +8,31 @@ localPropertiesFile.withReader("UTF-8") { reader -> properties.load(reader) }
 
 def flutterSdkPath = properties.getProperty("flutter.sdk")
 assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-apply from: "$flutterSdkPath/packages/flutter_tools/gradle/app_plugin_loader.gradle"
+
+// Use the new declarative plugins block instead of apply from
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+    }
+    plugins {
+        id 'dev.flutter.flutter-gradle-plugin' apply false
+    }
+    def flutterSdkPath = properties.getProperty("flutter.sdk")
+    settings.ext.flutterSdkPath = flutterSdkPath
+}
+
+plugins {
+    id 'dev.flutter.flutter-gradle-plugin' apply false
+}
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath "$flutterSdkPath/packages/flutter_tools/gradle/flutter_gradle_plugin.gradle.kts"
+    }
+}
