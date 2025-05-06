@@ -257,7 +257,8 @@ class _MyHomePageState extends State<MyHomePage> {
               // 合体後のモンスターを表示
               if (combineMonsters[0] != null && combineMonsters[1] != null) ...[
                 Icon(Icons.arrow_forward), // `→` アイコンを表示
-                buildNewCombinedMonsterWidget(combineMonsters[0]!, combineMonsters[1]!), // 合体後のモンスターを表示
+                buildNewCombinedMonsterWidget(
+                    combineMonsters[0]!, combineMonsters[1]!), // 合体後のモンスターを表示
               ],
             ],
           ),
@@ -265,14 +266,15 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               ElevatedButton(
-                onPressed: combineMonsters[0] != null || combineMonsters[1] != null
-                    ? () {
-                  // キャンセルボタンが押された時の処理
-                  setState(() {
-                    combineMonsters = [null, null];
-                  });
-                }
-                    : null, // combineMonstersが両方nullの場合はボタンを非アクティブにする
+                onPressed:
+                    combineMonsters[0] != null || combineMonsters[1] != null
+                        ? () {
+                            // キャンセルボタンが押された時の処理
+                            setState(() {
+                              combineMonsters = [null, null];
+                            });
+                          }
+                        : null, // combineMonstersが両方nullの場合はボタンを非アクティブにする
                 child: Text('キャンセル'),
               ),
               FutureBuilder<int>(
@@ -287,16 +289,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   }
 
                   return ElevatedButton(
-                    onPressed: (snapshot.hasData && snapshot.data! > 0 &&
-                        (combineMonsters[0] != null && combineMonsters[1] != null))
+                    onPressed: (snapshot.hasData &&
+                            snapshot.data! > 0 &&
+                            (combineMonsters[0] != null &&
+                                combineMonsters[1] != null))
                         ? () async {
-                      // 合体ボタンが押された時の処理
-                      bool result = await combine();
-                      if (!result) {
-                        infoMessage = Text('行動力がなくなりました', style: TextStyle(color: Colors.red));
-                      }
-                      setState(() {});
-                    }
+                            // 合体ボタンが押された時の処理
+                            bool result = await combine();
+                            if (!result) {
+                              infoMessage = Text('行動力がなくなりました',
+                                  style: TextStyle(color: Colors.red));
+                            }
+                            setState(() {});
+                          }
                         : null, // ボタンを非アクティブ状態にする
                     child: combineButtonText,
                   );
@@ -334,8 +339,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   buttons.add(
                     ElevatedButton(
                       onPressed: _resetGame,
-                      child: Text('リトライ', style: TextStyle(color: Colors.white)),
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+                      child:
+                          Text('リトライ', style: TextStyle(color: Colors.white)),
+                      style:
+                          ElevatedButton.styleFrom(backgroundColor: Colors.red),
                     ),
                   );
                 }
@@ -346,14 +353,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 ElevatedButton(
                   onPressed: isSearchButtonActive
                       ? () async {
-                      bool result = await search(searchCost);
-                      if (!result) {
-                        infoMessage = Text('行動力がなくなりました',
-                            style: TextStyle(color: Colors.red));
-                      }
-                      setState(() {});
-                  }
-
+                          bool result = await search(searchCost);
+                          if (!result) {
+                            infoMessage = Text('行動力がなくなりました',
+                                style: TextStyle(color: Colors.red));
+                          }
+                          setState(() {});
+                        }
                       : null, // ボタンを非アクティブ状態にする
                   child: searchButtonText,
                 ),
@@ -480,11 +486,11 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-
   Widget buildLine(List<Monster> lineMonsters) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: lineMonsters.map((monster) => buildOwnMonsterBox(monster)).toList(),
+      children:
+          lineMonsters.map((monster) => buildOwnMonsterBox(monster)).toList(),
     );
   }
 
@@ -506,10 +512,12 @@ class _MyHomePageState extends State<MyHomePage> {
             searchedMonsters[targetIndexSearched];
         searchedMonsters[targetIndexSearched] = temp;
       } else if (draggedIndexMonsters != -1 && targetIndexSearched != -1) {
-        ownMonsters[draggedIndexMonsters] = searchedMonsters[targetIndexSearched];
+        ownMonsters[draggedIndexMonsters] =
+            searchedMonsters[targetIndexSearched];
         searchedMonsters[targetIndexSearched] = draggedMonster;
       } else if (draggedIndexSearched != -1 && targetIndexMonsters != -1) {
-        searchedMonsters[draggedIndexSearched] = ownMonsters[targetIndexMonsters];
+        searchedMonsters[draggedIndexSearched] =
+            ownMonsters[targetIndexMonsters];
         ownMonsters[targetIndexMonsters] = draggedMonster;
       }
 
@@ -580,13 +588,12 @@ class OwnMonsterBox extends StatelessWidget {
       onWillAccept: (data) => true,
       onAccept: (data) {
         final _MyHomePageState state =
-        context.findAncestorStateOfType<_MyHomePageState>()!;
+            context.findAncestorStateOfType<_MyHomePageState>()!;
         state._swapMonster(data, monster);
       },
     );
   }
 }
-
 
 class MonsterWidget extends StatelessWidget {
   final Monster monster;
@@ -626,13 +633,15 @@ class MonsterWidget extends StatelessWidget {
             ),
             // アイコン用のImage.asset
             Positioned.fill(
-              child: Image.asset('assets/images/${monster.no}.png', fit: BoxFit.cover),
+              child: Image.asset('assets/images/${monster.no}.png',
+                  fit: BoxFit.cover),
             ),
             // 縁取り用のContainer
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(color: this.borderColor, width: 3.0), // 縁取りの色を設定
+                  border: Border.all(
+                      color: this.borderColor, width: 3.0), // 縁取りの色を設定
                 ),
               ),
             ),
@@ -703,12 +712,10 @@ class ExpectMonsterWidget extends StatelessWidget {
     // 成長率に基づいてborderColorを決定するロジック
     if (growM >= 72 || growW >= 72 || growI >= 72) {
       return Colors.redAccent; // 高成長率の色
-    }
-    else if (growM >= 65 || growW >= 65 || growI >= 65) {
+    } else if (growM >= 65 || growW >= 65 || growI >= 65) {
       return Colors.orangeAccent; // 高成長率の色
     } else {
       return Colors.grey; // 低成長率の色
     }
   }
 }
-

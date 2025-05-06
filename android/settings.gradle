@@ -1,36 +1,9 @@
-// Use the new declarative plugins block instead of apply from
 pluginManagement {
     repositories {
         gradlePluginPortal()
         google()
         mavenCentral()
     }
-    plugins {
-        id 'dev.flutter.flutter-gradle-plugin' apply false
-    }
 }
-
-plugins {
-    id 'dev.flutter.flutter-gradle-plugin' apply false
-}
-
+rootProject.name = 'scramblemonster'
 include ':app'
-
-def localPropertiesFile = new File(rootProject.projectDir, "local.properties")
-def properties = new Properties()
-
-assert localPropertiesFile.exists()
-localPropertiesFile.withReader("UTF-8") { reader -> properties.load(reader) }
-
-def flutterSdkPath = properties.getProperty("flutter.sdk")
-assert flutterSdkPath != null, "flutter.sdk not set in local.properties"
-
-buildscript {
-    repositories {
-        google()
-        mavenCentral()
-    }
-    dependencies {
-        classpath "$flutterSdkPath/packages/flutter_tools/gradle/flutter_gradle_plugin.gradle.kts"
-    }
-}
