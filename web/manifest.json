@@ -1,6 +1,6 @@
 {
-    "name": "scramblemonster",
-    "short_name": "scramblemonster",
+    "name": "scramblemonster_new",
+    "short_name": "scramblemonster_new",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
